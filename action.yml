@@ -40,11 +40,14 @@ runs:
         esac
 
         mkdir -p "$HOME/.local/bin"
-        curl -fsSL \
-          "https://github.com/ayarotsky/diesel-guard/releases/download/v${VERSION}/diesel-guard-${TARGET}.tar.xz" \
-          -o /tmp/diesel-guard.tar.xz
-        tar xJf /tmp/diesel-guard.tar.xz --strip-components=1 -C "$HOME/.local/bin"
-        rm /tmp/diesel-guard.tar.xz
+        ARCHIVE="diesel-guard-${TARGET}.tar.xz"
+        BASE_URL="https://github.com/ayarotsky/diesel-guard/releases/download/v${VERSION}"
+        WORKDIR=$(mktemp -d)
+        curl -fsSL "${BASE_URL}/${ARCHIVE}" -o "${WORKDIR}/${ARCHIVE}"
+        curl -fsSL "${BASE_URL}/${ARCHIVE}.sha256" -o "${WORKDIR}/${ARCHIVE}.sha256"
+        ( cd "${WORKDIR}" && shasum -a 256 -c "${ARCHIVE}.sha256" )
+        tar xJf "${WORKDIR}/${ARCHIVE}" --strip-components=1 -C "$HOME/.local/bin"
+        rm -rf "${WORKDIR}"
         echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
     - name: Check DB migrations
